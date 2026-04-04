@@ -1,0 +1,107 @@
+name: customer-support-env
+version: "1.0"
+
+description: >
+  An OpenEnv-compliant environment that simulates real-world customer support
+  ticket workflows. An AI agent must classify incoming tickets, craft appropriate
+  replies, decide when to escalate to a human agent, and close resolved tickets.
+  The environment provides dense, shaped rewards at every step to enable
+  efficient RL training — not just a sparse end-of-episode signal.
+
+entry_point: env.environment:CustomerSupportEnv
+
+author: "Adit Sharma, Mansi Verma, Priyanshi Vishwakarma"
+tags:
+  - openenv
+  - customer-support
+  - nlp
+  - real-world
+  - multi-step
+
+# ---------------------------------------------------------
+# Tasks
+# ---------------------------------------------------------
+tasks:
+  - id: easy
+    difficulty: easy
+    description: >
+      Classify a single customer ticket into the correct category
+      (billing / technical / refund / account / abuse).
+    max_steps: 5
+    scoring: "1.0 for correct classification, 0.0 otherwise."
+
+  - id: medium
+    difficulty: medium
+    description: >
+      Classify the ticket correctly (worth 0.4) and then reply with a helpful,
+      keyword-rich response that addresses the root issue (up to 0.6).
+    max_steps: 8
+    scoring: "Partial credit: 0.4 classify + up to 0.6 reply quality."
+
+  - id: hard
+    difficulty: hard
+    description: >
+      Full resolution pipeline — classify (0.2), give a quality reply (0.3),
+      escalate to a human agent when required (0.2), and close the ticket (0.3).
+      Penalises unnecessary escalation (−0.1).
+    max_steps: 10
+    scoring: "Partial credit across all 4 action types; penalty for bad escalation."
+
+# ---------------------------------------------------------
+# Action Space
+# ---------------------------------------------------------
+action_space:
+  type: discrete-structured
+  actions:
+    - name: classify
+      required_fields: [category]
+      category_values: [billing, technical, refund, account, abuse]
+      description: "Classify the ticket into a support category."
+
+    - name: reply
+      required_fields: [content]
+      description: "Send a reply message to the customer."
+
+    - name: escalate
+      required_fields: []
+      description: "Escalate the ticket to a human agent."
+
+    - name: close
+      required_fields: []
+      description: "Close the ticket and end the episode (done=True)."
+
+# ---------------------------------------------------------
+# Observation Space
+# ---------------------------------------------------------
+observation_space:
+  type: structured
+  fields:
+    - name: ticket_id
+      type: string
+      description: "Unique identifier for the support ticket."
+
+    - name: customer_query
+      type: string
+      description: "The customer's message or complaint."
+
+    - name: history
+      type: list[string]
+      description: "Chronological conversation history (agent + customer turns)."
+
+    - name: status
+      type: string
+      enum: [open, pending, resolved]
+      description: "Current status of the ticket."
+
+# ---------------------------------------------------------
+# Reward
+# ---------------------------------------------------------
+reward_range: [0.0, 1.0]
+reward_structure:
+  classify_correct: +0.3
+  reply_per_keyword_hit: +0.1 (max 0.4)
+  reply_before_classify: -0.05
+  escalate_correct: +0.2
+  escalate_unnecessary: -0.1
+  close_bonus: +0.0 to +0.3 (depends on prior progress)
+  time_penalty: -0.05 (if step_count >= max_steps)

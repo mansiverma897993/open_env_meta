@@ -1,0 +1,86 @@
+[
+  {
+    "id": "t001",
+    "query": "I was charged twice for my order and need the duplicate payment removed.",
+    "category": "billing",
+    "requires_escalation": false,
+    "difficulty": "easy"
+  },
+  {
+    "id": "t002",
+    "query": "The app keeps crashing on my iPhone every time I open it.",
+    "category": "technical",
+    "requires_escalation": false,
+    "difficulty": "easy"
+  },
+  {
+    "id": "t003",
+    "query": "I want to request a refund for my subscription — I cancelled it last month.",
+    "category": "refund",
+    "requires_escalation": false,
+    "difficulty": "easy"
+  },
+  {
+    "id": "t004",
+    "query": "I cannot log in to my account. My password reset email never arrived.",
+    "category": "account",
+    "requires_escalation": false,
+    "difficulty": "easy"
+  },
+  {
+    "id": "t005",
+    "query": "Another user is harassing me repeatedly inside the platform. Please act.",
+    "category": "abuse",
+    "requires_escalation": true,
+    "difficulty": "medium"
+  },
+  {
+    "id": "t006",
+    "query": "My payment failed three times but I can see pending charges on my bank statement.",
+    "category": "billing",
+    "requires_escalation": false,
+    "difficulty": "medium"
+  },
+  {
+    "id": "t007",
+    "query": "Data I uploaded last week has disappeared from my account without any explanation.",
+    "category": "technical",
+    "requires_escalation": true,
+    "difficulty": "medium"
+  },
+  {
+    "id": "t008",
+    "query": "I was promised a full refund 10 days ago but nothing has arrived. I need this resolved NOW.",
+    "category": "refund",
+    "requires_escalation": true,
+    "difficulty": "medium"
+  },
+  {
+    "id": "t009",
+    "query": "Someone logged into my account from another country. I did not authorise this.",
+    "category": "account",
+    "requires_escalation": true,
+    "difficulty": "hard"
+  },
+  {
+    "id": "t010",
+    "query": "I have been waiting three weeks for a refund your team promised. I am considering legal action.",
+    "category": "billing",
+    "requires_escalation": true,
+    "difficulty": "hard"
+  },
+  {
+    "id": "t011",
+    "query": "Your API has been returning 500 errors for 6 hours and it is costing my business thousands of dollars.",
+    "category": "technical",
+    "requires_escalation": true,
+    "difficulty": "hard"
+  },
+  {
+    "id": "t012",
+    "query": "I upgraded my plan but was never given access to the premium features I paid for.",
+    "category": "billing",
+    "requires_escalation": false,
+    "difficulty": "medium"
+  }
+]
