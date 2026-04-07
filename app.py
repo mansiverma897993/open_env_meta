@@ -1,6 +1,7 @@
 import os
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
 from env.environment import CustomerSupportEnv
 from env.models import Action
 from env.tasks import TASKS
@@ -14,6 +15,30 @@ def get_env(session_id="default"):
     if session_id not in sessions:
         sessions[session_id] = CustomerSupportEnv()
     return sessions[session_id]
+
+class ResetRequest(BaseModel):
+    task_id: str | None = None
+    session_id: str = "default"
+
+
+def _reset_impl(*, task_id: str | None, session_id: str):
+    env = get_env(session_id)
+    try:
+        obs = env.reset(task_id=task_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    obs_dump = obs.model_dump()
+    return {
+        "observation": obs_dump,
+        "state": obs_dump,
+        "reward_range": [0.0, 1.0],
+        "task": {
+            "id": env.current_task["id"],
+            "description": env.current_task["description"],
+            "max_steps": env.current_task["max_steps"],
+        },
+    }
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -41,19 +66,19 @@ def health():
 
 @app.get("/reset")
 def reset(task_id: str = None, session_id: str = "default"):
-    env = get_env(session_id)
-    try:
-        obs = env.reset(task_id=task_id)
-    except ValueError as e:
-        raise HTTPException(400, str(e))
-    return {
-        "observation": obs.model_dump(),
-        "task": {
-            "id": env.current_task["id"],
-            "description": env.current_task["description"],
-            "max_steps": env.current_task["max_steps"],
-        },
-    }
+    return _reset_impl(task_id=task_id, session_id=session_id)
+
+
+@app.post("/reset")
+def reset_post(
+    req: ResetRequest | None = None,
+    task_id: str | None = None,
+    session_id: str = "default",
+):
+    # Prefer values from the request body, but fall back to query params.
+    effective_task_id = task_id if req is None else (req.task_id if req.task_id is not None else task_id)
+    effective_session_id = session_id if req is None else req.session_id
+    return _reset_impl(task_id=effective_task_id, session_id=effective_session_id)
 
 
 @app.post("/step")
@@ -65,8 +90,11 @@ def step(action: Action, session_id: str = "default"):
         obs, reward, done, info = env.step(action)
     except RuntimeError as e:
         raise HTTPException(400, str(e))
+
+    obs_dump = obs.model_dump()
     return {
-        "observation": obs.model_dump(),
+        "observation": obs_dump,
+        "state": obs_dump,
         "reward": reward.model_dump(),
         "done": done,
         "info": info,
@@ -81,6 +109,11 @@ def state(session_id: str = "default"):
     return env.state()
 
 
+@app.post("/state")
+def state_post(session_id: str = "default"):
+    return state(session_id=session_id)
+
+
 @app.get("/tasks")
 def list_tasks():
     return [
@@ -92,6 +125,11 @@ def list_tasks():
         }
         for t in TASKS.values()
     ]
+
+
+@app.post("/tasks")
+def list_tasks_post():
+    return list_tasks()
 
 
 if __name__ == "__main__":
