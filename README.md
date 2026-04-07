@@ -2,7 +2,6 @@
 
 > A real-world reinforcement learning environment where an AI agent learns to handle customer support tickets — classify issues, craft replies, escalate when needed, and resolve tickets.
 
-Built for the **Meta × PyTorch OpenEnv Hackathon — Round 1, April 2026.**
 
 ---
 
