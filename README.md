@@ -189,12 +189,16 @@ cd customer-support-openenv
 pip install -r requirements.txt
 ```
 
-### 2. Add your API key (optional — needed for LLM baseline)
+### 2. Configure required inference environment variables
 
 ```bash
-# .env
-OPENAI_API_KEY=sk-...
+# .env (required by inference.py for Meta Phase 1 evaluation)
+API_BASE_URL=https://your-llm-endpoint/v1
+MODEL_NAME=your-model-id
+HF_TOKEN=your-api-token
 ```
+
+`inference.py` uses the OpenAI Python client and reads only the variables above.
 
 ### 3. Run the baseline
 
@@ -202,7 +206,7 @@ OPENAI_API_KEY=sk-...
 python baseline/run_baseline.py
 ```
 
-No API key? It runs in **mock mode** with deterministic actions — still produces valid scores.
+If those variables are not set, the baseline/mock policy still runs deterministic actions so script execution remains reproducible.
 
 ### 4. Start the HTTP server
 
@@ -268,7 +272,11 @@ obs, reward, done, info = env.step(Action(action_type="close"))
 
 ```bash
 docker build -t openenv .
-docker run -p 7860:7860 -e OPENAI_API_KEY=sk-... openenv
+docker run -p 7860:7860 \
+  -e API_BASE_URL=https://your-llm-endpoint/v1 \
+  -e MODEL_NAME=your-model-id \
+  -e HF_TOKEN=your-api-token \
+  openenv
 ```
 
 ---
@@ -279,7 +287,10 @@ docker run -p 7860:7860 -e OPENAI_API_KEY=sk-... openenv
 2. Create a new Space → select **Docker** SDK
 3. Add tag: `openenv`
 4. Upload this entire repo
-5. Add `OPENAI_API_KEY` as a Space secret
+5. Add these Space secrets:
+   - `API_BASE_URL`
+   - `MODEL_NAME`
+   - `HF_TOKEN`
 
 The server starts automatically and exposes all endpoints.
 
@@ -303,10 +314,13 @@ Measured with deterministic mock actions (no API key needed):
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | `/` | HTML landing page |
+| POST | `/reset` | Start/reset episode (validator-compatible) |
 | GET | `/reset?task_id=easy` | Start a new episode |
 | POST | `/step` | Submit an Action |
 | GET | `/state` | Current raw state |
+| POST | `/state` | Current raw state (compatibility route) |
 | GET | `/tasks` | List all tasks |
+| POST | `/tasks` | List all tasks (compatibility route) |
 | GET | `/health` | Health check |
 | GET | `/docs` | Swagger UI |
 
